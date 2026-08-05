@@ -8,6 +8,7 @@ block_cipher = None
 # ---------- DATA ----------
 datas = [
     ('web', 'web'),
+   
 ]
 
 binaries = []
@@ -105,14 +106,14 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='logo/logo_app.ico',
+    icon=None,,
 )
 
 if sys.platform == 'darwin':
     app = BUNDLE(
         exe,
         name='AudioTTo.app',
-        icon='logo/logo_app.icns',
+        icon=None,
         bundle_identifier='com.manumarzo.audiotto',
         info_plist={
             'NSHighResolutionCapable': 'True',
