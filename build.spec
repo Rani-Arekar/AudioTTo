@@ -8,7 +8,6 @@ block_cipher = None
 # ---------- DATA ----------
 datas = [
     ('web', 'web'),
-    ('logo', 'logo'),
 ]
 
 binaries = []
