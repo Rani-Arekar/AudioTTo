@@ -18,6 +18,25 @@ from dotenv import load_dotenv
 import threading
 from tqdm import tqdm
 import fitz 
+# ReportLab is used for native PDF generation (preferred over LaTeX)
+try:
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Preformatted
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+except Exception:
+    colors = None
+    A4 = None
+    getSampleStyleSheet = None
+    Paragraph = None
+    SimpleDocTemplate = None
+    Table = None
+    TableStyle = None
+    Preformatted = None
+    pdfmetrics = None
+    TTFont = None
 
 if sys.platform == "win32":
     try:
@@ -34,29 +53,11 @@ MODEL_SIZE = "tiny"
 COMPUTE_TYPE = "int8"
 LANGUAGE = None  
 N_THREADS = 4
-load_dotenv()
 
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-model_name = "gemini-3.1-flash-lite-preview"
-whisper_model = None
-
-
-# --- FIX WINDOWS ENCODING ---
-def safe_print(text):
-    try:
-        print(text)
-    except UnicodeEncodeError:
-        try:
-            sys.stdout.buffer.write((str(text) + "\n").encode("utf-8", errors="replace"))
-            sys.stdout.flush()
-        except Exception:
-            pass
-    except Exception:
-        pass
-
+# Support both older GenAI SDKs (which expose `configure`) and newer usage
+# where we create a `genai.Client(api_key=...)` or rely on `GEMINI_API_KEY` env var.
 # --- PATH CONFIGURATION ---
 def get_base_dir():
-    """Restituisce la cartella dell'eseguibile o dello script, gestendo i bundle .app di macOS."""
     if getattr(sys, 'frozen', False):
         path = os.path.dirname(sys.executable)
         if ".app/Contents/MacOS" in path:
@@ -66,14 +67,22 @@ def get_base_dir():
 
 BASE_DIR = get_base_dir()
 
-def resource_path(relative_path):
-    """ Get the absolute path of the resource, working both in Dev and EXE (PyInstaller) """
-    if hasattr(sys, '_MEIPASS'):
-        return os.path.join(sys._MEIPASS, relative_path)
-    return os.path.join(BASE_DIR, relative_path)
-
-# Carica .env usando il percorso assoluto
+# Load .env FIRST
 load_dotenv(os.path.join(BASE_DIR, ".env"))
+
+_api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+
+if _api_key and not os.getenv("GEMINI_API_KEY"):
+    os.environ["GEMINI_API_KEY"] = _api_key
+
+try:
+    if hasattr(genai, "configure"):
+        genai.configure(api_key=_api_key)
+except Exception:
+    pass
+
+model_name = "gemini-3.1-flash-lite-preview"
+whisper_model = None
 
 
 # Logger Setup
@@ -83,6 +92,14 @@ def set_logger(callback):
     global logger_callback
     logger_callback = callback
 
+def safe_print(*args, **kwargs):
+    """Safely print text to the console."""
+    try:
+        print(*args, **kwargs)
+    except UnicodeEncodeError:
+        text = " ".join(map(str, args))
+        print(text.encode("utf-8", errors="replace").decode("utf-8"))
+        
 def log(*args, **kwargs):
     """ Log a message to the console or to the logger callback, usefull for user interactions """
     msg = " ".join(map(str, args))
@@ -352,6 +369,14 @@ def generate_latex_document(text: str, title: str, slides_path: str, audio_lang:
         return "", "API key missing. Please configure Gemini API key in Settings."
 
     log("🧠 Generating LaTeX document with Gemini...")
+
+    # Detect presence of numeric content (numbers, equations, tables)
+    numeric_present = False
+    try:
+        if text and re.search(r"\d|\\\(|\\\[|=|\\frac|\\sum|\\int|%", text):
+            numeric_present = True
+    except Exception:
+        numeric_present = False
     
     try:
         client = genai.Client(api_key=api_key)
@@ -390,6 +415,11 @@ def generate_latex_document(text: str, title: str, slides_path: str, audio_lang:
     INPUT TYPE: {input_type}
     - If input is transcription: summarize and structure it as lecture notes.
     - If input is pdf_slides: create high-quality summarized notes directly from the PDF content and slide structure.
+
+    NOTE ON NUMERICAL CONTENT:
+    - If the source contains numeric values, equations, data tables or worked examples, include a dedicated "Numerical Examples" section.
+    - For each numerical item: show step-by-step calculations, preserve original numbers, present results in a table when helpful, and provide a short runnable Python snippet that reproduces the calculation.
+    - Keep theoretical explanations concise when numeric demonstrations are present; prioritize clarity and reproducibility.
 
     Title:
     Lecture Notes: {title}
@@ -550,6 +580,207 @@ def latex_to_plain_text(latex_code: str) -> str:
     return text.strip()
 
 
+def _find_system_font() -> tuple[str | None, str | None]:
+    """Try to find a reasonable TTF font on the system for Unicode support.
+    Returns (font_name, font_path) or (None, None).
+    """
+    fonts_dir = None
+    if sys.platform == 'win32':
+        fonts_dir = os.path.join(os.environ.get('WINDIR', 'C:\\Windows'), 'Fonts')
+    else:
+        fonts_dir = '/usr/share/fonts'
+
+    if not fonts_dir or not os.path.isdir(fonts_dir):
+        return None, None
+
+    candidates = [
+        'DejaVuSans.ttf',
+        'DejaVuSans-Regular.ttf',
+        'SegoeUI.ttf',
+        'Arial.ttf',
+        'Tahoma.ttf',
+    ]
+
+    for root, _, files in os.walk(fonts_dir):
+        for f in files:
+            if f in candidates:
+                return os.path.splitext(f)[0], os.path.join(root, f)
+
+    # Fallback: pick first TTF found
+    for root, _, files in os.walk(fonts_dir):
+        for f in files:
+            if f.lower().endswith('.ttf'):
+                return os.path.splitext(f)[0], os.path.join(root, f)
+
+    return None, None
+
+
+def generate_pdf_from_latex(latex_code: str, pdf_path: str, title: str = None) -> bool:
+    """Render a LaTeX-like document into a professional PDF using ReportLab.
+    Preserves sections, subsections, itemize/enumerate, simple tabular, and code blocks.
+    Returns True on success.
+    """
+    if SimpleDocTemplate is None:
+        log('❌ ReportLab not installed. Install with `pip install reportlab`.')
+        return False
+
+    # Prepare styles and fonts
+    styles = getSampleStyleSheet()
+    normal = styles['BodyText']
+    h1 = ParagraphStyle('Heading1', parent=styles['Heading1'], spaceAfter=6)
+    h2 = ParagraphStyle('Heading2', parent=styles['Heading2'], spaceAfter=4)
+    code_style = ParagraphStyle('Code', fontName='Courier', fontSize=9, leading=11)
+
+    font_name, font_path = _find_system_font()
+    if font_name and pdfmetrics and TTFont:
+        try:
+            pdfmetrics.registerFont(TTFont(font_name, font_path))
+            normal.fontName = font_name
+            h1.fontName = font_name
+            h2.fontName = font_name
+            code_style.fontName = font_name
+        except Exception:
+            pass
+
+    # Simple LaTeX-like parser
+    lines = latex_code.splitlines()
+    story = []
+    i = 0
+    in_itemize = False
+    in_enumerate = False
+    in_verbatim = False
+    verbatim_lines = []
+    table_mode = False
+    table_lines = []
+
+    while i < len(lines):
+        line = lines[i].rstrip()
+        stripped = line.strip()
+
+        # Headings
+        m = re.match(r"\\section\*?\{(.+?)\}", stripped)
+        if m:
+            story.append(Paragraph(m.group(1), h1))
+            story.append(Spacer(1, 6))
+            i += 1
+            continue
+
+        m = re.match(r"\\subsection\*?\{(.+?)\}", stripped)
+        if m:
+            story.append(Paragraph(m.group(1), h2))
+            story.append(Spacer(1, 4))
+            i += 1
+            continue
+
+        # itemize/enumerate
+        if stripped.startswith('\\begin{itemize}'):
+            in_itemize = True
+            i += 1
+            continue
+        if stripped.startswith('\\end{itemize}'):
+            in_itemize = False
+            story.append(Spacer(1, 6))
+            i += 1
+            continue
+
+        if stripped.startswith('\\begin{enumerate}'):
+            in_enumerate = True
+            enum_index = 1
+            i += 1
+            continue
+        if stripped.startswith('\\end{enumerate}'):
+            in_enumerate = False
+            story.append(Spacer(1, 6))
+            i += 1
+            continue
+
+        if in_itemize and stripped.startswith('\\item'):
+            content = stripped[len('\\item'):].strip() or '•'
+            story.append(Paragraph('• ' + content, normal))
+            i += 1
+            continue
+
+        if in_enumerate and stripped.startswith('\\item'):
+            content = stripped[len('\\item'):].strip() or ''
+            story.append(Paragraph(f'{enum_index}. ' + content, normal))
+            enum_index += 1
+            i += 1
+            continue
+
+        # verbatim/code blocks
+        if stripped.startswith('\\begin{verbatim}') or stripped.startswith('\\begin{lstlisting}'):
+            in_verbatim = True
+            verbatim_lines = []
+            i += 1
+            continue
+        if stripped.startswith('\\end{verbatim}') or stripped.startswith('\\end{lstlisting}'):
+            in_verbatim = False
+            code_text = '\n'.join(verbatim_lines)
+            story.append(Preformatted(code_text, code_style))
+            story.append(Spacer(1, 6))
+            i += 1
+            continue
+        if in_verbatim:
+            verbatim_lines.append(lines[i])
+            i += 1
+            continue
+
+        # tabular
+        if stripped.startswith('\\begin{tabular}'):
+            table_mode = True
+            table_lines = []
+            i += 1
+            continue
+        if stripped.startswith('\\end{tabular}'):
+            table_mode = False
+            rows = []
+            for tl in table_lines:
+                # remove trailing \\\\ if present
+                row_text = tl.rstrip()
+                if row_text.endswith('\\\\'):
+                    row_text = row_text[:-2]
+                cols = [c.strip() for c in row_text.split('&')]
+                rows.append(cols)
+            try:
+                t = Table(rows)
+                t.setStyle(TableStyle([
+                    ('GRID', (0,0), (-1,-1), 0.5, colors.black),
+                    ('VALIGN', (0,0), (-1,-1), 'TOP'),
+                ]))
+                story.append(t)
+                story.append(Spacer(1, 6))
+            except Exception:
+                for r in rows:
+                    story.append(Paragraph(' | '.join(r), normal))
+            i += 1
+            continue
+        if table_mode:
+            table_lines.append(stripped)
+            i += 1
+            continue
+
+        # Regular paragraph
+        if stripped:
+            txt = stripped
+            txt = re.sub(r'\\textbf\{(.+?)\}', r'<b>\1</b>', txt)
+            txt = re.sub(r'\\emph\{(.+?)\}', r'<i>\1</i>', txt)
+            story.append(Paragraph(txt, normal))
+            story.append(Spacer(1, 4))
+        else:
+            story.append(Spacer(1, 6))
+
+        i += 1
+
+    try:
+        doc = SimpleDocTemplate(pdf_path, pagesize=A4, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
+        doc.build(story)
+        log(f"✅ PDF generated via ReportLab: {os.path.basename(pdf_path)}")
+        return True
+    except Exception as e:
+        log(f"❌ ReportLab PDF generation failed: {e}")
+        return False
+
+
 def save_history_entry(entry: dict, history_path: str):
     os.makedirs(os.path.dirname(history_path), exist_ok=True)
 
@@ -650,58 +881,225 @@ def find_latex_engine() -> str | None:
     return None
 
 
+def detect_tex_distribution() -> str | None:
+    """Detect whether MiKTeX or TeX Live is available. Returns 'miktex', 'texlive', or None."""
+    # Check common executables
+    if shutil.which("tlmgr"):
+        return "texlive"
+
+    # MiKTeX package manager common names
+    for cmd in ("mpm", "miktex-mpm", "miktexsetup", "mpm.exe", "miktex-mpm.exe"):
+        if shutil.which(cmd):
+            return "miktex"
+
+    # Windows typical MiKTeX installation folders
+    if sys.platform == "win32":
+        local_app_data = os.getenv("LOCALAPPDATA", "")
+        program_files = os.getenv("ProgramFiles", "")
+        program_files_x86 = os.getenv("ProgramFiles(x86)", "")
+        possible = [
+            os.path.join(local_app_data, "Programs", "MiKTeX"),
+            os.path.join(program_files, "MiKTeX"),
+            os.path.join(program_files_x86, "MiKTeX"),
+        ]
+        for p in possible:
+            if p and os.path.isdir(p):
+                return "miktex"
+
+    return None
+
+
+def run_subprocess(cmd: list[str], cwd: str, timeout: int = 60) -> tuple[int, str, str]:
+    """Run subprocess with timeout, capture stdout/stderr, and return (returncode, stdout, stderr)."""
+    try:
+        proc = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=timeout)
+        out = proc.stdout or ""
+        err = proc.stderr or ""
+        return proc.returncode, out, err
+    except subprocess.TimeoutExpired as e:
+        return -1, getattr(e, 'stdout', '') or '', getattr(e, 'stderr', '') or f'Timeout after {timeout}s'
+    except FileNotFoundError:
+        return -2, '', f'Executable not found: {cmd[0]}'
+    except Exception as e:
+        return -3, '', str(e)
+
+
+def parse_missing_packages(output: str) -> list[str]:
+    """Try to parse missing .sty/package names from LaTeX output.
+    Returns a list of candidate package names (without extension).
+    """
+    missing = set()
+    # Patterns like: LaTeX Error: File `gettitlestring.sty' not found.
+    for m in re.findall(r"File `([^`']+?)\.sty' not found", output, flags=re.IGNORECASE):
+        missing.add(m)
+
+    # Pattern: ! LaTeX Error: File `...sty' not found.
+    for m in re.findall(r"File\s+`([^`']+?\.sty)'", output, flags=re.IGNORECASE):
+        name = os.path.splitext(m)[0]
+        missing.add(name)
+
+    # Generic 'I can't find file `xyz.sty''
+    for m in re.findall(r"I can't find file `([^`']+?\.sty)'", output, flags=re.IGNORECASE):
+        missing.add(os.path.splitext(m)[0])
+
+    # If no .sty found, search for messages like 'Package foo not found' (less common)
+    for m in re.findall(r"Package\s+([^\s:]+)\s+not found", output, flags=re.IGNORECASE):
+        missing.add(m)
+
+    return list(missing)
+
+
+def try_install_packages(packages: list[str], distro: str, cwd: str, timeout: int = 60) -> tuple[bool, str]:
+    """Attempt to install packages using tlmgr (TeX Live) or mpm (MiKTeX). Returns (success, log)."""
+    logs = []
+    if not packages:
+        return False, "No packages to install."
+
+    if distro == "texlive":
+        tlmgr = shutil.which("tlmgr")
+        if not tlmgr:
+            return False, "tlmgr not found on PATH."
+
+        for pkg in packages:
+            cmd = [tlmgr, "install", pkg]
+            rc, out, err = run_subprocess(cmd, cwd=cwd, timeout=timeout)
+            logs.append(f"tlmgr {' '.join(cmd[1:])} -> rc={rc}\n{out}\n{err}")
+            if rc != 0:
+                return False, "\n".join(logs)
+
+        return True, "\n".join(logs)
+
+    if distro == "miktex":
+        # Try common MiKTeX package manager commands
+        mpm = shutil.which("mpm") or shutil.which("miktex-mpm") or shutil.which("mpm.exe") or shutil.which("miktex-mpm.exe")
+        if not mpm:
+            return False, "MiKTeX package manager not found on PATH."
+
+        for pkg in packages:
+            # Best-effort: use mpm --install <pkg>
+            cmd = [mpm, "--install", pkg]
+            rc, out, err = run_subprocess(cmd, cwd=cwd, timeout=timeout)
+            logs.append(f"mpm install {pkg} -> rc={rc}\n{out}\n{err}")
+            if rc != 0:
+                # try without -- (some mpm variants expect different args)
+                cmd2 = [mpm, "install", pkg]
+                rc2, out2, err2 = run_subprocess(cmd2, cwd=cwd, timeout=timeout)
+                logs.append(f"mpm install (alt) {pkg} -> rc={rc2}\n{out2}\n{err2}")
+                if rc2 != 0:
+                    return False, "\n".join(logs)
+
+        return True, "\n".join(logs)
+
+    return False, "Unknown TeX distribution or installer not available."
+
+
 # ---------------- COMPILATION ----------------
 def compile_pdf(tex_path: str) -> bool:
     log("📄 Compiling PDF...")
 
     output_dir, file_name = os.path.split(tex_path)
     pdf_path = os.path.join(output_dir, f"{os.path.splitext(file_name)[0]}.pdf")
-
     latex_engine = find_latex_engine()
+    distro = detect_tex_distribution()
+
+    base_name = os.path.splitext(file_name)[0]
+    compile_log_path = os.path.join(output_dir, f"{base_name}_compile.log")
+    accumulated_log: list[str] = []
+
     if not latex_engine:
-        log("⚠️ No LaTeX engine found. Creating a readable fallback PDF instead.")
+        msg = "No LaTeX engine found on the system (pdflatex/xelatex/lualatex)."
+        log(f"⚠️ {msg} Creating a readable fallback PDF instead.")
+        accumulated_log.append(msg)
         try:
             with open(tex_path, "r", encoding="utf-8") as f:
                 latex_code = f.read()
             plain_text = latex_to_plain_text(latex_code)
-            if write_plain_text_pdf(plain_text, pdf_path, os.path.splitext(file_name)[0]):
+            if write_plain_text_pdf(plain_text, pdf_path, base_name):
                 log("✅ Fallback PDF successfully generated.")
+                accumulated_log.append("Fallback PDF generated.")
+                with open(compile_log_path, "w", encoding="utf-8") as lf:
+                    lf.write("\n".join(accumulated_log))
                 return True
         except Exception as exc:
             log(f"❌ Fallback PDF preparation failed: {exc}")
+            accumulated_log.append(f"Fallback generation failed: {exc}")
+        with open(compile_log_path, "w", encoding="utf-8") as lf:
+            lf.write("\n".join(accumulated_log))
         return False
 
-    for _ in range(2):  # run twice
-        try:
-            result = subprocess.run(
-                [latex_engine, "-interaction=nonstopmode", file_name],
-                check=True, cwd=output_dir, capture_output=True, text=True
-            )
-            if result.stdout:
-                log(result.stdout.strip())
-            if result.stderr:
-                log(result.stderr.strip())
-        except FileNotFoundError:
-            log(f"❌ PDF compilation failed: {latex_engine} was not found on PATH.")
-            break
-        except Exception as e:
-            log(f"❌ PDF compilation failed: {e}")
+    def attempt_once() -> tuple[int, str, str]:
+        cmd = [latex_engine, "-interaction=nonstopmode", file_name]
+        log(f"🔁 Running: {' '.join(cmd)} (cwd={output_dir})")
+        rc, out, err = run_subprocess(cmd, cwd=output_dir, timeout=120)
+        if out:
+            log(out.strip())
+            accumulated_log.append("STDOUT:\n" + out)
+        if err:
+            log(err.strip())
+            accumulated_log.append("STDERR:\n" + err)
+        return rc, out, err
 
-    if os.path.exists(pdf_path):
+    # First attempt
+    rc, out, err = attempt_once()
+
+    # If successful and PDF created, return
+    if rc == 0 and os.path.exists(pdf_path):
         log("✅ PDF successfully generated.")
+        with open(compile_log_path, "w", encoding="utf-8") as lf:
+            lf.write("\n".join(accumulated_log))
         return True
 
-    log("⚠️ LaTeX compilation failed. Creating a readable fallback PDF instead.")
-    try:
-        with open(tex_path, "r", encoding="utf-8") as f:
-            latex_code = f.read()
-        plain_text = latex_to_plain_text(latex_code)
-        if write_plain_text_pdf(plain_text, pdf_path, os.path.splitext(file_name)[0]):
-            log("✅ Fallback PDF successfully generated.")
-            return True
-    except Exception as exc:
-        log(f"❌ Fallback PDF preparation failed: {exc}")
+    combined = (out or "") + "\n" + (err or "")
+    missing = parse_missing_packages(combined)
 
+    if missing:
+        log(f"⚠️ Detected missing LaTeX packages: {', '.join(missing)}")
+        accumulated_log.append(f"Missing packages detected: {', '.join(missing)}")
+
+        if distro:
+            log(f"🔧 Attempting to install missing packages using {distro} package manager...")
+            success, install_log = try_install_packages(missing, distro, cwd=output_dir, timeout=120)
+            accumulated_log.append("INSTALL LOG:\n" + install_log)
+
+            if success:
+                log("✅ Packages installed. Retrying compilation once...")
+                rc2, out2, err2 = attempt_once()
+                if rc2 == 0 and os.path.exists(pdf_path):
+                    log("✅ PDF successfully generated after installing packages.")
+                    with open(compile_log_path, "w", encoding="utf-8") as lf:
+                        lf.write("\n".join(accumulated_log))
+                    return True
+                else:
+                    log("❌ Compilation still failed after package installation.")
+                    accumulated_log.append("Retry after install failed.")
+            else:
+                log("❌ Failed to install missing packages automatically.")
+                accumulated_log.append("Automatic install failed: " + install_log)
+        else:
+            log("⚠️ No TeX distribution package manager detected to auto-install missing packages.")
+            accumulated_log.append("No package manager available for automatic install.")
+
+    else:
+        accumulated_log.append("No explicit missing-package messages found in LaTeX output.")
+
+    # If reached here, compilation failed. Provide clear instructions and write compile log.
+    user_msg_lines = [
+        "LaTeX compilation failed.",
+        "Check the compilation log for details and install missing LaTeX packages.",
+        "If you are on Windows and MiKTeX prompted for package installation, ensure MiKTeX is configured for unattended installs or install the packages manually.",
+        "You can download the generated .tex and notes from the output folder.",
+    ]
+    for m in user_msg_lines:
+        log(m)
+        accumulated_log.append(m)
+
+    try:
+        with open(compile_log_path, "w", encoding="utf-8") as lf:
+            lf.write("\n\n".join(accumulated_log))
+    except Exception:
+        pass
+
+    # Leave .tex and notes for user to download; return False to indicate no PDF
     return False
 
 
@@ -831,13 +1229,19 @@ def main(args_list=None):
 
             log(f"📝 LaTeX file created: {tex_path}")
 
-            # 6. PDF compilation (pdflatex)
-            if compile_pdf(tex_path):
-                succeeded = True
-                pdf_path = os.path.join(output_dir, f"{base_name}_appunti.pdf")
-            else:
+            # 6. PDF generation (ReportLab) — LaTeX compilation is optional
+            pdf_path = os.path.join(output_dir, f"{base_name}_appunti.pdf")
+            # Use ReportLab-based generator to avoid external TeX dependencies
+            try:
+                if generate_pdf_from_latex(latex_doc, pdf_path, base_name):
+                    succeeded = True
+                else:
+                    if not failure_reason:
+                        failure_reason = "PDF generation (ReportLab) failed. The .tex and notes files are available for manual export."
+            except Exception as e:
+                log(f"❌ PDF generation error: {e}")
                 if not failure_reason:
-                    failure_reason = "PDF compilation failed. A fallback PDF could not be created."
+                    failure_reason = f"PDF generation error: {sanitize_error_text(str(e))}. The .tex and notes files are available for manual export."
         else:
             if not failure_reason:
                 failure_reason = generation_error or "Failed to generate LaTeX document."

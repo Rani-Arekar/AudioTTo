@@ -90,7 +90,6 @@ TEMP_UPLOADS = os.path.join(BASE_DIR, "temp_uploads")
 ENV_PATH = os.path.join(BASE_DIR, ".env")
 
 load_dotenv(ENV_PATH, override=True)
-add_miktex_to_path()
 app = FastAPI()
 
 
