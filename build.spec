@@ -1,0 +1,126 @@
+# -*- mode: python ; coding: utf-8 -*-
+from PyInstaller.utils.hooks import collect_all, copy_metadata
+import sys
+import os
+
+block_cipher = None
+
+# ---------- DATA ----------
+datas = [
+    ('web', 'web'),
+    ('logo', 'logo'),
+]
+
+binaries = []
+
+# ---------- HIDDEN IMPORTS ----------
+hiddenimports = [
+    'uvicorn.logging',
+    'uvicorn.loops',
+    'uvicorn.loops.auto',
+    'uvicorn.loops.asyncio',
+    'uvicorn.protocols',
+    'uvicorn.protocols.http',
+    'uvicorn.protocols.http.auto',
+    'uvicorn.protocols.websockets',
+    'uvicorn.protocols.websockets.auto',
+    'uvicorn.lifespan',
+    'uvicorn.lifespan.on',
+
+    'fastapi',
+    'starlette',
+    'pydantic',
+
+    'python_multipart',
+    'dotenv',
+    'fitz',
+
+    # AI / Audio
+    'faster_whisper',
+    'av',
+]
+
+# ---------- COLLECT PACKAGES ----------
+for pkg in ['faster_whisper', 'av']:
+    tmp = collect_all(pkg)
+    datas += tmp[0]
+    binaries += tmp[1]
+    hiddenimports += tmp[2]
+
+# ---------- METADATA ----------
+packages_to_copy = [
+    'tqdm',
+    'regex',
+    'requests',
+    'packaging',
+    'filelock',
+    'huggingface_hub',
+    'google-genai',
+    'numpy',
+    'uvicorn',
+    'fastapi',
+    'av'
+]
+
+for pkg in packages_to_copy:
+    try:
+        datas += copy_metadata(pkg)
+    except Exception:
+        print(f"[WARNING] Metadata not found for {pkg}")
+
+# ---------- ANALYSIS ----------
+a = Analysis(
+    ['gui_app.py'],
+    binaries=binaries,
+    datas=datas,
+    hiddenimports=hiddenimports,
+    excludes=[
+        'torch',
+        'noisereduce',
+        'scipy',
+        'matplotlib',
+        'tkinter', 'tcl', 'tk'
+    ],
+    noarchive=False,
+)
+
+pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+
+exe = EXE(
+    pyz,
+    a.scripts,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    [],
+    name='AudioTTo',
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=False,  # Disabilitato per evitare problemi con antivirus
+    upx_exclude=[],
+    runtime_tmpdir=None,
+    console=True,  # Mostra console per debug
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
+    icon='logo/logo_app.ico',
+)
+
+if sys.platform == 'darwin':
+    app = BUNDLE(
+        exe,
+        name='AudioTTo.app',
+        icon='logo/logo_app.icns',
+        bundle_identifier='com.manumarzo.audiotto',
+        info_plist={
+            'NSHighResolutionCapable': 'True',
+            'CFBundleName': 'AudioTTo',
+            'CFBundleDisplayName': 'AudioTTo',
+            'CFBundleVersion': '1.0.0',
+            'CFBundleShortVersionString': '1.0.0',
+            'NSRequiresAquaSystemAppearance': 'False',
+        },
+    )

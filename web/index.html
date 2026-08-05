@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AudioTTo - Lecture Summarizer</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="surface">
+        <!-- Public Navbar (Landing) -->
+        <header class="public-navbar" id="public-navbar">
+            <div class="public-navbar-inner">
+                <div class="brand">
+                    <div class="brand-mark" aria-hidden="true"></div>
+                    <span class="brand-name">AudioTTo</span>
+                </div>
+                <nav class="public-nav">
+                    <a href="#home" class="nav-link" data-scroll="home">Home</a>
+                    <a href="#features" class="nav-link" data-scroll="features">Features</a>
+                    <a href="#about" class="nav-link" data-scroll="about">About</a>
+                    <a href="#contact" class="nav-link" data-scroll="contact">Contact</a>
+                </nav>
+                <div class="public-nav-actions">
+                    <button id="nav-login" class="nav-btn" type="button">Login</button>
+                    <button id="nav-signup" class="primary-btn nav-btn-primary" type="button">Sign up</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Landing Page -->
+        <main class="public-main" id="view-landing">
+            <section class="hero" id="home">
+                <div class="hero-left">
+                    <div class="hero-badge">AI-Powered Study Workflow</div>
+                    <h1 class="hero-title">Turn Long Lectures Into Smart Notes in Seconds</h1>
+                    <p class="hero-subtitle">Upload audio, video, or slides. Get a clean transcript and structured notes ready to study, share, and export.</p>
+                    <div class="hero-cta">
+                        <button id="cta-upload" class="primary-btn cta-btn">Upload Lecture</button>
+                        <button id="cta-demo" class="secondary-btn cta-btn">Try Demo</button>
+                    </div>
+                    <div class="hero-metrics" aria-label="Product highlights">
+                        <div class="metric">
+                            <strong>Fast</strong>
+                            <span>Speech-to-text + notes</span>
+                        </div>
+                        <div class="metric">
+                            <strong>Private</strong>
+                            <span>Account-isolated outputs</span>
+                        </div>
+                        <div class="metric">
+                            <strong>Exportable</strong>
+                            <span>PDF + TXT downloads</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-right" aria-hidden="true">
+                    <div class="hero-illustration">
+                        <div class="hero-orb"></div>
+                        <div class="hero-wave">
+                            <span></span><span></span><span></span><span></span><span></span>
+                        </div>
+                        <div class="hero-note-card">
+                            <div class="note-line"></div>
+                            <div class="note-line"></div>
+                            <div class="note-line short"></div>
+                            <div class="note-chip">Summary</div>
+                            <div class="note-chip">Key Points</div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <section class="section" id="features">
+                <div class="section-head">
+                    <h2>Everything you need to study smarter</h2>
+                    <p>Modern, productivity-first components inspired by Notion, Grammarly, and Otter.ai.</p>
+                </div>
+                <div class="feature-grid">
+                    <article class="feature-card">
+                        <div class="feature-icon" aria-hidden="true">🎙️</div>
+                        <h3>Speech to Text</h3>
+                        <p>Accurate transcripts optimized for lectures.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="feature-icon" aria-hidden="true">✨</div>
+                        <h3>AI Summarization</h3>
+                        <p>Clean sections, headings, and structured notes.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="feature-icon" aria-hidden="true">🧠</div>
+                        <h3>Quiz Generation</h3>
+                        <p>Study-ready questions and practice prompts.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="feature-icon" aria-hidden="true">🃏</div>
+                        <h3>Flashcards</h3>
+                        <p>Turn key ideas into fast recall prompts.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="feature-icon" aria-hidden="true">📄</div>
+                        <h3>PDF Export</h3>
+                        <p>Download polished PDF notes for sharing.</p>
+                    </article>
+                </div>
+            </section>
+
+            <section class="section" id="about">
+                <div class="section-head">
+                    <h2>About AudioTTo</h2>
+                    <p>A lecture summarizer and notes generator that turns long recordings into structured, student-friendly notes.</p>
+                </div>
+                <div class="about-grid">
+                    <article class="about-card">
+                        <h3>Built for focus</h3>
+                        <p>Upload your lecture and get organized notes you can revise faster.</p>
+                    </article>
+                    <article class="about-card">
+                        <h3>Student-first outputs</h3>
+                        <p>Transcript + notes + PDF export in one consistent workspace.</p>
+                    </article>
+                    <article class="about-card">
+                        <h3>Secure by design</h3>
+                        <p>Your generated outputs are isolated per account.</p>
+                    </article>
+                </div>
+            </section>
+
+            <section class="section" id="how">
+                <div class="section-head">
+                    <h2>How it works</h2>
+                    <p>A simple 3-step workflow from lecture → notes.</p>
+                </div>
+                <div class="how-grid">
+                    <article class="how-card">
+                        <div class="how-step">1</div>
+                        <h3>Upload</h3>
+                        <p>Add audio, video, or slides (PDF). Optionally paste a YouTube link.</p>
+                    </article>
+                    <article class="how-card">
+                        <div class="how-step">2</div>
+                        <h3>Process</h3>
+                        <p>Speech recognition + AI summarization runs with live progress.</p>
+                    </article>
+                    <article class="how-card">
+                        <div class="how-step">3</div>
+                        <h3>Study</h3>
+                        <p>Review transcript, summary, key points, and export to PDF.</p>
+                    </article>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="section-head">
+                    <h2>Trusted by students</h2>
+                    <p>Clean, student-friendly UX built for speed.</p>
+                </div>
+                <div class="testimonials">
+                    <article class="testimonial">
+                        <p>“I upload my lecture recording and get notes I can actually revise from.”</p>
+                        <span>— Engineering student</span>
+                    </article>
+                    <article class="testimonial">
+                        <p>“The transcript + PDF export saves me hours every week.”</p>
+                        <span>— Business student</span>
+                    </article>
+                    <article class="testimonial">
+                        <p>“Feels like a real startup product — smooth and focused.”</p>
+                        <span>— CS student</span>
+                    </article>
+                </div>
+            </section>
+
+            <section class="section" id="contact">
+                <div class="section-head">
+                    <h2>Contact</h2>
+                    <p>Questions, feedback, or demo requests — reach out anytime.</p>
+                </div>
+                <div class="contact-grid">
+                    <div class="contact-card">
+                        <h3>Email</h3>
+                        <p><a class="contact-link" href="mailto:principle@gcoej.ac.in">principle@gcoej.ac.in</a></p>
+                    </div>
+                    <div class="contact-card">
+                        <h3>Social</h3>
+                        <div class="social-links">
+                            <a class="social-link" href="#" aria-label="GitHub">GitHub</a>
+                            <a class="social-link" href="#" aria-label="LinkedIn">LinkedIn</a>
+                            <a class="social-link" href="#" aria-label="Twitter">Twitter</a>
+                        </div>
+                    </div>
+                    <div class="contact-card">
+                        <h3>Location</h3>
+                        <p>Government College of Engineering, Jalgaon.</p>
+                        <p class="contact-sub">Department of Computer Engineering</p>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="public-footer">
+                <div class="footer-inner">
+                    <div class="footer-brand">
+                        <div class="brand">
+                            <div class="brand-mark" aria-hidden="true"></div>
+                            <span class="brand-name">AudioTTo</span>
+                        </div>
+                        <p>Lecture summarizer and notes generator built for students.</p>
+                    </div>
+                    <div class="footer-cols">
+                        <div>
+                            <h4>Product</h4>
+                            <a href="#features" class="footer-link" data-scroll="features">Features</a>
+                            <a href="#how" class="footer-link" data-scroll="how">How it works</a>
+                            <a href="#about" class="footer-link" data-scroll="about">About</a>
+                            <a href="#contact" class="footer-link" data-scroll="contact">Contact</a>
+                        </div>
+                        <div>
+                            <h4>Account</h4>
+                            <button class="footer-link-btn" id="footer-login" type="button">Login</button>
+                            <button class="footer-link-btn" id="footer-signup" type="button">Sign up</button>
+                        </div>
+                        <div>
+                            <h4>Social</h4>
+                            <a href="#" class="footer-link">GitHub</a>
+                            <a href="#" class="footer-link">LinkedIn</a>
+                            <a href="#" class="footer-link">Twitter</a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </main>
+
+        <!-- Login / Signup Page -->
+        <main class="public-main hidden" id="view-auth">
+            <div class="auth-shell" id="auth-shell">
+
+                <!-- LEFT: Feature Showcase Panel -->
+                <div class="auth-feature-panel" aria-hidden="true">
+                    <div class="auth-feature-bg">
+                        <div class="auth-orb auth-orb-1"></div>
+                        <div class="auth-orb auth-orb-2"></div>
+                        <div class="auth-grid-lines"></div>
+                    </div>
+                    <div class="auth-feature-content">
+                        <div class="auth-brand">
+                            <div class="brand-mark"></div>
+                            <span class="brand-name">AudioTTo</span>
+                        </div>
+                        <h2 class="auth-feature-title">Turn Lectures Into<br><span class="gradient-text">Smart Notes</span></h2>
+                        <p class="auth-feature-sub">Upload any audio, video, or PDF slides — our AI transcribes, summarizes, and structures everything into study-ready notes in seconds.</p>
+
+                        <div class="auth-feature-list">
+                            <div class="auth-feature-item">
+                                <div class="auth-feature-icon">🎙️</div>
+                                <div>
+                                    <strong>Local Speech-to-Text</strong>
+                                    <span>Powered by Faster-Whisper for fast, private transcription</span>
+                                </div>
+                            </div>
+                            <div class="auth-feature-item">
+                                <div class="auth-feature-icon">✨</div>
+                                <div>
+                                    <strong>AI Note Generation</strong>
+                                    <span>Google Gemini synthesizes structured, study-ready notes</span>
+                                </div>
+                            </div>
+                            <div class="auth-feature-item">
+                                <div class="auth-feature-icon">📄</div>
+                                <div>
+                                    <strong>PDF & LaTeX Export</strong>
+                                    <span>Download polished, formatted notes to share anywhere</span>
+                                </div>
+                            </div>
+                            <div class="auth-feature-item">
+                                <div class="auth-feature-icon">🖼️</div>
+                                <div>
+                                    <strong>Slide Integration</strong>
+                                    <span>Auto-embeds images from PDF slides into your notes</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="auth-stats">
+                            <div class="auth-stat">
+                                <strong>100%</strong>
+                                <span>Local & Private</span>
+                            </div>
+                            <div class="auth-stat-divider"></div>
+                            <div class="auth-stat">
+                                <strong>10x</strong>
+                                <span>Faster Notes</span>
+                            </div>
+                            <div class="auth-stat-divider"></div>
+                            <div class="auth-stat">
+                                <strong>PDF</strong>
+                                <span>LaTeX Export</span>
+                            </div>
+                        </div>
+
+                        <!-- Floating mock note card -->
+                        <div class="auth-mock-card">
+                            <div class="mock-card-header">
+                                <span class="mock-dot green"></span>
+                                <span class="mock-card-title">lecture_notes.pdf</span>
+                                <span class="mock-chip">✓ Generated</span>
+                            </div>
+                            <div class="mock-line" style="width:90%"></div>
+                            <div class="mock-line" style="width:75%"></div>
+                            <div class="mock-line short" style="width:55%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Auth Form Panel -->
+                <section id="auth-section" class="auth-section">
+                    <a href="/" id="auth-back-btn" class="floating-close-btn" aria-label="Close" title="Back to Home">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </a>
+                    <div class="auth-form-inner">
+                        <div class="auth-intro">
+                            <div class="auth-intro-icon">🎓</div>
+                            <h2 id="auth-title">Welcome back</h2>
+                            <p id="auth-subtitle">Sign in to your AudioTTo workspace</p>
+                        </div>
+
+                        <div class="auth-tabs">
+                            <button id="login-tab" class="auth-tab active" type="button">
+                                <span class="tab-icon">🔑</span> Login
+                            </button>
+                            <button id="signup-tab" class="auth-tab" type="button">
+                                <span class="tab-icon">✨</span> Sign Up
+                            </button>
+                        </div>
+
+                        <!-- Login Form -->
+                        <form id="login-form" class="auth-form">
+                            <div class="input-group">
+                                <label for="login-username">
+                                    <span class="input-label-icon">👤</span> Username or Email
+                                </label>
+                                <div class="input-wrapper">
+                                    <input type="text" id="login-username" placeholder="Enter your username" required autocomplete="username">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="login-password">
+                                    <span class="input-label-icon">🔒</span> Password
+                                </label>
+                                <div class="input-wrapper">
+                                    <input type="password" id="login-password" placeholder="Enter your password" required autocomplete="current-password">
+                                    <button type="button" class="input-eye-btn" id="login-eye-btn" title="Toggle password visibility">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="submit" class="primary-btn auth-btn" id="login-submit-btn">
+                                <span class="btn-text">Sign In</span>
+                                <span class="btn-icon">→</span>
+                            </button>
+                        </form>
+
+                        <!-- Signup Form -->
+                        <form id="signup-form" class="auth-form hidden">
+                            <div class="input-group">
+                                <label for="signup-username">
+                                    <span class="input-label-icon">👤</span> Username
+                                </label>
+                                <div class="input-wrapper">
+                                    <input type="text" id="signup-username" placeholder="Choose a username (min 3 chars)" required autocomplete="username">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="signup-password">
+                                    <span class="input-label-icon">🔒</span> Password
+                                </label>
+                                <div class="input-wrapper">
+                                    <input type="password" id="signup-password" placeholder="Create a strong password (min 6 chars)" required autocomplete="new-password">
+                                    <button type="button" class="input-eye-btn" id="signup-eye-btn" title="Toggle password visibility">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="password-strength" id="password-strength">
+                                <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
+                                <span class="strength-label" id="strength-label">Password strength</span>
+                            </div>
+                            <button type="submit" class="primary-btn auth-btn" id="signup-submit-btn">
+                                <span class="btn-text">Create Account</span>
+                                <span class="btn-icon">→</span>
+                            </button>
+                        </form>
+
+                        <div class="auth-divider"><span>Your workspace is private &amp; secure</span></div>
+
+                        <div class="auth-benefits">
+                            <div class="benefit-item">
+                                <span class="benefit-icon">🔐</span>
+                                <div>
+                                    <strong>Private Workspace</strong>
+                                    <span>All your notes and uploads are isolated per account</span>
+                                </div>
+                            </div>
+                            <div class="benefit-item">
+                                <span class="benefit-icon">📚</span>
+                                <div>
+                                    <strong>Unlimited Notes</strong>
+                                    <span>Generate, save, and export as many notes as you need</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="auth-footnote">By continuing, you agree to our <a href="#" style="color:var(--accent-2);text-decoration:underline;">Terms</a> and <a href="#" style="color:var(--accent-2);text-decoration:underline;">Privacy Policy</a>.</p>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- App Shell (Dashboard) -->
+        <div class="app-shell requires-auth hidden" id="app-shell">
+            <!-- Mobile Burger Button -->
+            <button id="burger-btn" class="burger-btn" aria-label="Toggle sidebar">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <aside class="sidebar-left" id="sidebar-left">
+                <div class="sidebar-brand">
+                    <div class="brand">
+                        <div class="brand-mark" aria-hidden="true"></div>
+                        <span class="brand-name">AudioTTo</span>
+                    </div>
+                </div>
+                <nav class="sidebar-menu">
+                    <button class="menu-item active" data-page="dashboard">Dashboard</button>
+                    <button class="menu-item" data-page="upload">Upload Lecture</button>
+                    <button class="menu-item" data-page="history">History</button>
+                    <button class="menu-item" data-page="saved">Saved Notes</button>
+                    <button class="menu-item" data-page="settings">Settings</button>
+                </nav>
+                <div class="sidebar-footer">
+                    <div class="sidebar-user" id="user-label">Logged in</div>
+                    <button id="sidebar-logout-btn" class="menu-item danger">Logout</button>
+                </div>
+            </aside>
+
+            <div class="app-main">
+                <header class="topbar">
+                    <div class="topbar-left">
+                        <div class="status-pill" id="status-pill">Idle</div>
+                    </div>
+                    <div class="topbar-search">
+                        <input id="global-search" type="text" placeholder="Search lectures, notes, history…" />
+                    </div>
+                    <div class="topbar-actions">
+                        <div class="avatar" id="profile-avatar" title="Profile">AI</div>
+                    </div>
+                </header>
+
+                <main class="page-host">
+                    <!-- Dashboard Page -->
+                    <section class="page" id="page-dashboard" data-page="dashboard">
+                        <h2 class="page-title">Dashboard</h2>
+                        <div class="kpi-grid">
+                            <div class="kpi-card glass">
+                                <span class="kpi-label">Total Lectures</span>
+                                <strong class="kpi-value" id="kpi-total-lectures">0</strong>
+                                <span class="kpi-foot">All uploads in your workspace</span>
+                            </div>
+                            <div class="kpi-card glass">
+                                <span class="kpi-label">Notes Generated</span>
+                                <strong class="kpi-value" id="kpi-notes-generated">0</strong>
+                                <span class="kpi-foot">Successful generations</span>
+                            </div>
+                            <div class="kpi-card glass">
+                                <span class="kpi-label">Study Hours Saved</span>
+                                <strong class="kpi-value" id="kpi-hours-saved">0</strong>
+                                <span class="kpi-foot">Based on successful lectures</span>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-grid">
+                            <section class="panel glass">
+                                <div class="panel-head">
+                                    <h3>Weekly Activity</h3>
+                                    <span class="panel-sub" id="weekly-sub">Last 7 days</span>
+                                </div>
+                                <div class="bar-chart" id="weekly-chart" aria-label="Weekly activity chart"></div>
+                            </section>
+                            <section class="panel glass">
+                                <div class="panel-head">
+                                    <h3>Recent Uploads</h3>
+                                    <span class="panel-sub">Latest processing runs</span>
+                                </div>
+                                <div class="table">
+                                    <div class="table-row table-head">
+                                        <span>Lecture</span>
+                                        <span>Date</span>
+                                        <span>Status</span>
+                                        <span>Action</span>
+                                    </div>
+                                    <div id="recent-uploads" class="table-body"></div>
+                                </div>
+                            </section>
+                        </div>
+                    </section>
+
+                    <!-- Upload Lecture Page -->
+                    <section class="page hidden upload-section" id="page-upload" data-page="upload">
+                        <h2 class="page-title">Upload Lecture</h2>
+                        <div class="upload-shell glass">
+                            <div class="drop-large" id="lecture-drop-zone">
+                                <div class="drop-large-inner">
+                                    <div class="drop-badge">Drag & drop your lecture file</div>
+                                    <h3>Audio, Video, or PDF</h3>
+                                    <p>Drop a file here or choose a source below. You can also attach slides as PDF.</p>
+                                    <div class="drop-actions">
+                                        <button class="secondary-btn" id="browse-audio" type="button">Browse Audio</button>
+                                        <button class="secondary-btn" id="browse-video" type="button">Browse Video</button>
+                                        <button class="secondary-btn" id="browse-pdf" type="button">Browse PDF</button>
+                                    </div>
+                                    <div class="file-chips">
+                                        <div class="file-chip" id="audio-file-info"></div>
+                                        <div class="file-chip" id="video-file-info"></div>
+                                        <div class="file-chip" id="pdf-file-info"></div>
+                                    </div>
+                                </div>
+                                <input type="file" id="audio-input" accept=".mp3,.wav,.m4a,.flac,.ogg,.aac,.wma,.opus" hidden>
+                                <input type="file" id="video-input" accept=".mp4,.mov,.mkv,.avi,.webm,.wmv" hidden>
+                                <input type="file" id="pdf-input" accept=".pdf" hidden>
+                            </div>
+
+                            <div class="upload-options">
+                                <div class="input-row">
+                                    <div class="input-group grow">
+                                        <label for="youtube-input">YouTube Link</label>
+                                        <input type="text" id="youtube-input" placeholder="https://youtube.com/..." />
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="language-select">Language</label>
+                                        <select id="language-select" class="select">
+                                            <option value="auto">Auto</option>
+                                            <option value="en">English</option>
+                                            <option value="it">Italian</option>
+                                            <option value="es">Spanish</option>
+                                            <option value="fr">French</option>
+                                            <option value="de">German</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="input-row">
+                                    <div class="input-group grow">
+                                        <label>Summary Length</label>
+                                        <div class="segmented" role="radiogroup" aria-label="Summary length">
+                                            <label class="seg"><input type="radio" name="summary-length" value="short"> <span>Short</span></label>
+                                            <label class="seg"><input type="radio" name="summary-length" value="medium" checked> <span>Medium</span></label>
+                                            <label class="seg"><input type="radio" name="summary-length" value="detailed"> <span>Detailed</span></label>
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="pages-input">Slide Pages</label>
+                                        <input type="text" id="pages-input" placeholder="All" disabled>
+                                    </div>
+                                </div>
+
+                                <div class="checks">
+                                    <label class="check"><input type="checkbox" id="opt-quiz"> <span>Generate Quiz</span></label>
+                                    <label class="check"><input type="checkbox" id="opt-flashcards"> <span>Generate Flashcards</span></label>
+                                    <label class="check"><input type="checkbox" id="opt-questions"> <span>Extract Important Questions</span></label>
+                                </div>
+
+                                <div class="input-row end">
+                                    <button id="thread-config-btn" class="secondary-btn" type="button">CPU Threads</button>
+                                    <button id="start-btn" class="primary-btn glow" disabled type="button">Generate Notes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Processing Page -->
+                    <section class="page hidden" id="page-processing" data-page="processing">
+                        <h2 class="page-title">Processing</h2>
+                        <div class="processing-hero glass" aria-hidden="true">
+                            <div class="proc-orb"></div>
+                            <div class="proc-steps">
+                                <div class="proc-step"><span class="dot"></span><span>Uploading</span></div>
+                                <div class="proc-step"><span class="dot"></span><span>Speech Recognition</span></div>
+                                <div class="proc-step"><span class="dot"></span><span>AI Summarization</span></div>
+                                <div class="proc-step"><span class="dot"></span><span>Notes Generation</span></div>
+                            </div>
+                        </div>
+
+                        <section class="progress-section" id="progress-section">
+                            <div class="progress-header">
+                                <h3>Processing Progress</h3>
+                                <span id="progress-label">0%</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill" id="progress-fill"></div>
+                            </div>
+                            <div class="progress-steps" id="progress-steps">
+                                <span class="step active">Upload</span>
+                                <span class="step">Speech</span>
+                                <span class="step">Summarize</span>
+                                <span class="step">Export</span>
+                            </div>
+                        </section>
+
+                        <div class="terminal-section" id="terminal-section">
+                            <div class="terminal-header">
+                                <span>AI Log</span>
+                                <div class="terminal-controls">
+                                    <span class="status-indicator" id="status-indicator">Waiting...</span>
+                                    <button id="terminal-toggle" class="terminal-toggle-btn" type="button">Collapse</button>
+                                </div>
+                            </div>
+                            <div class="terminal-window" id="terminal-window">
+                                <div class="log-line">Welcome to AudioTTo. Upload a lecture to start.</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Generated Notes Page -->
+                    <section class="page hidden" id="page-notes" data-page="notes">
+                        <div class="notes-head">
+                            <div>
+                                <h2 class="page-title">Generated Notes</h2>
+                                <div class="notes-meta"><span class="status-indicator" id="notes-source">No notes loaded</span></div>
+                            </div>
+                            <div class="notes-actions">
+                                <button id="notes-download-pdf" class="secondary-btn" type="button">Download PDF</button>
+                                <button id="notes-copy-btn" class="secondary-btn" type="button">Copy Notes</button>
+                                <button id="notes-share-btn" class="secondary-btn" type="button">Share</button>
+                                <button id="notes-save-btn" class="primary-btn" type="button">Save Notes</button>
+                            </div>
+                        </div>
+
+                        <div class="notes-split">
+                            <section class="panel glass">
+                                <div class="panel-head">
+                                    <h3>Transcript</h3>
+                                    <span class="panel-sub" id="transcript-source">No transcript loaded</span>
+                                </div>
+                                <pre class="mono" id="transcript-preview">Upload a lecture to generate a transcript.</pre>
+                            </section>
+                            <section class="panel glass">
+                                <div class="tabs" role="tablist">
+                                    <button class="tab active" data-tab="summary" type="button">Summary</button>
+                                    <button class="tab" data-tab="keypoints" type="button">Key Points</button>
+                                    <button class="tab" data-tab="quiz" type="button">Quiz</button>
+                                    <button class="tab" data-tab="flashcards" type="button">Flashcards</button>
+                                    <button class="tab" data-tab="questions" type="button">Important Questions</button>
+                                </div>
+                                <div class="tab-panels">
+                                    <div class="tab-panel active" data-panel="summary">
+                                        <pre class="mono" id="notes-preview">Generate notes to preview them here.</pre>
+                                    </div>
+                                    <div class="tab-panel" data-panel="keypoints">
+                                        <pre class="mono" id="keypoints-preview">No key points loaded.</pre>
+                                    </div>
+                                    <div class="tab-panel" data-panel="quiz">
+                                        <pre class="mono" id="quiz-preview">Quiz generation options are UI-only in this version.</pre>
+                                    </div>
+                                    <div class="tab-panel" data-panel="flashcards">
+                                        <pre class="mono" id="flashcards-preview">Flashcards options are UI-only in this version.</pre>
+                                    </div>
+                                    <div class="tab-panel" data-panel="questions">
+                                        <pre class="mono" id="questions-preview">Important questions options are UI-only in this version.</pre>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </section>
+
+                    <!-- History Page -->
+                    <section class="page hidden" id="page-history" data-page="history">
+                        <h2 class="page-title">History</h2>
+                        <div class="panel glass">
+                            <div class="panel-head">
+                                <h3>Previous uploads</h3>
+                                <span class="panel-sub">View, download, or delete runs</span>
+                            </div>
+                            <div class="table">
+                                <div class="table-row table-head">
+                                    <span>Lecture</span>
+                                    <span>Date</span>
+                                    <span>Status</span>
+                                    <span>Actions</span>
+                                </div>
+                                <div id="history-list" class="table-body"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Saved Notes Page -->
+                    <section class="page hidden" id="page-saved" data-page="saved">
+                        <h2 class="page-title">Saved Notes</h2>
+                        <div class="saved-grid" id="results-list">
+                            <div class="empty-state">No notes generated.</div>
+                        </div>
+                    </section>
+
+                    <!-- Settings Page -->
+                    <section class="page hidden" id="page-settings" data-page="settings">
+                        <h2 class="page-title">Settings</h2>
+                        <div class="settings-grid">
+                            <section class="panel glass">
+                                <div class="panel-head">
+                                    <h3>Preferences</h3>
+                                    <span class="panel-sub">Customize your workspace</span>
+                                </div>
+                                <div class="settings-list">
+                                    <div class="input-group">
+                                        <label>App Theme</label>
+                                        <div class="theme-selector" role="group" aria-label="Theme selection">
+                                            <button class="theme-seg" data-theme="system" type="button">🌐 System</button>
+                                            <button class="theme-seg" data-theme="light" type="button">☀️ Light</button>
+                                            <button class="theme-seg" data-theme="dark" type="button">🌙 Dark</button>
+                                        </div>
+                                    </div>
+                                    <!-- Legacy dark mode toggle (hidden, kept for JS compatibility) -->
+                                    <label class="toggle" style="display:none">
+                                        <input type="checkbox" id="darkmode-toggle" />
+                                        <span class="toggle-ui"></span>
+                                        <span>Dark mode</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <label for="pref-summary">Preferred summary size</label>
+                                        <select id="pref-summary" class="select">
+                                            <option value="short">Short</option>
+                                            <option value="medium" selected>Medium</option>
+                                            <option value="detailed">Detailed</option>
+                                        </select>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="pref-language">Language</label>
+                                        <select id="pref-language" class="select">
+                                            <option value="auto" selected>Auto</option>
+                                            <option value="en">English</option>
+                                            <option value="it">Italian</option>
+                                            <option value="es">Spanish</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section class="panel glass">
+                                <div class="panel-head">
+                                    <h3>AI & Performance</h3>
+                                    <span class="panel-sub">Keys and performance tuning</span>
+                                </div>
+                                <div class="settings-list">
+                                    <div class="api-status-compact">
+                                        <span id="settings-key-status" class="key-status">Checking...</span>
+                                        <button class="text-btn danger hidden" id="reset-key-btn" type="button">Reset</button>
+                                    </div>
+                                    <button class="secondary-btn" id="open-threads-settings" type="button">Configure CPU Threads</button>
+                                    <div class="session-section" id="session-section">
+                                        <span id="session-user">Logged in</span>
+                                        <button id="logout-btn" class="secondary-btn" type="button">Logout</button>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </section>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button id="close-modal-btn" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label for="api-key-input">Gemini API Key</label>
+                    <div class="api-key-wrapper">
+                        <input type="password" id="api-key-input" placeholder="Enter Gemini API Key">
+                        <button id="toggle-key-visibility" class="icon-toggle-btn" title="Show/Hide API Key">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="feather feather-eye">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="key-status" class="key-status">Checking...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-key-btn" class="primary-btn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Threads Modal -->
+    <div id="threads-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>CPU Threads</h2>
+                <button id="close-threads-btn" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Select number of
+                    threads for transcription (Max: <span id="max-cpu-display">4</span>)</p>
+                <div class="input-group">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <label for="threads-slider">Threads</label>
+                        <span id="threads-value-display" style="font-weight: bold; color: var(--accent-color);">4</span>
+                    </div>
+                    <input type="range" id="threads-slider" min="1" max="4" value="4" style="width: 100%;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-threads-btn" class="primary-btn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="/static/js/app_context.js?v=20260717"></script>
+    <script src="/static/js/ui_views.js?v=20260717"></script>
+    <script src="/static/js/ui_status.js?v=20260717"></script>
+    <script src="/static/js/outputs.js?v=20260717"></script>
+    <script src="/static/js/settings.js?v=20260717"></script>
+    <script src="/static/js/auth.js?v=20260717"></script>
+    <script src="/static/js/upload.js?v=20260717"></script>
+    <script src="/static/js/main.js?v=20260717"></script>
+</body>
+
+</html>
